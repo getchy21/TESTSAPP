@@ -53,7 +53,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "25/Apr/2019 The SapphireCoin Launched!";
+    const char* pszTimestamp = "25/Apr/2019 The TEST Launched!";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -113,7 +113,64 @@ public:
         networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
 
-        genesis = CreateGenesisBlock(1556165178, 2894113, 0x1e0ffff0, 1, 250 * COIN);
+
+          uint32_t nGenesisTime = 1613168550; // 09/10/2020 @ 7:32pm (UTC)
+
+          arith_uint256 test;
+          bool fNegative;
+          bool fOverflow;
+          test.SetCompact(0x1e0ffff0, &fNegative, &fOverflow);
+          std::cout << "Test threshold: " << test.GetHex() << "\n\n";
+
+          int genesisNonce = 0;
+          uint256 TempHashHolding = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+          uint256 BestBlockHash = uint256S("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+          for (int i=0;i<40000000;i++) {
+              genesis = CreateGenesisBlock(nGenesisTime, i, 0x1e0ffff0, 1, 0 * COIN);
+               genesis.hashPrevBlock = TempHashHolding;
+                Depending on when the timestamp is on the genesis block. You will need to use GetX16RHash or GetX16RV2Hash. Replace GetHash() with these below
+              consensus.hashGenesisBlock = genesis.GetHash();
+
+              arith_uint256 BestBlockHashArith = UintToArith256(BestBlockHash);
+              if (UintToArith256(consensus.hashGenesisBlock) < BestBlockHashArith) {
+                  BestBlockHash = consensus.hashGenesisBlock;
+                  std::cout << BestBlockHash.GetHex() << " Nonce: " << i << "\n";
+                  std::cout << "   PrevBlockHash: " << genesis.hashPrevBlock.GetHex() << "\n";
+              }
+
+              TempHashHolding = consensus.hashGenesisBlock;
+
+              if (BestBlockHashArith < test) {
+                  genesisNonce = i - 1;
+                  break;
+              }
+              std::cout << consensus.hashGenesisBlock.GetHex() << "\n";
+          }
+         std::cout << "\n";
+         std::cout << "\n";
+         std::cout << "\n";
+
+         std::cout << "hashGenesisBlock to 0x" << BestBlockHash.GetHex() << std::endl;
+         std::cout << "Genesis Nonce to " << genesisNonce << std::endl;
+         std::cout << "Genesis Merkle " << genesis.hashMerkleRoot.GetHex() << std::endl;
+
+         std::cout << "\n";
+         std::cout << "\n";
+         int totalHits = 0;
+         double totalTime = 0.0;
+
+          for(int x = 0; x < 16; x++) {
+         	totalHits += algoHashHits[x];
+         	totalTime += algoHashTotal[x];
+         	std::cout << "hash algo " << x << " hits " << algoHashHits[x] << " total " << algoHashTotal[x] << " avg " << algoHashTotal[x]/algoHashHits[x] << std::endl;
+         }
+
+        std::cout << "Totals: hash algo " <<  " hits " << totalHits << " total " << totalTime << " avg " << totalTime/totalHits << std::endl;
+
+         exit(0);
+
+
+        genesis = CreateGenesisBlock(1613168550, 2894113, 0x1e0ffff0, 1, 250 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x00000eef0583695d6da23a78bab1c39939bbb54cf9bd5f0d4881c8eef364cd26"));
 		//TODO: Set hashMerkleRoot. CLUE: Mining Testnet genesis block will give the hashMerkleRoot which will be the same as Mainnet.
@@ -149,15 +206,15 @@ public:
 
         // height-based activations
         consensus.height_last_ZC_AccumCheckpoint    = disabled;
-        consensus.height_last_ZC_WrappedSerials     = disabled; 
-        consensus.height_start_InvalidUTXOsCheck    = disabled; 
-        consensus.height_start_ZC_InvalidSerials    = disabled; 
+        consensus.height_last_ZC_WrappedSerials     = disabled;
+        consensus.height_start_InvalidUTXOsCheck    = disabled;
+        consensus.height_start_ZC_InvalidSerials    = disabled;
         consensus.height_start_ZC_SerialRangeCheck  = disabled;
         consensus.height_ZC_RecalcAccumulators      = disabled;
 
         // validation by-pass
-        // consensus.nPivxBadBlockTime = disabled; 
-        // consensus.nPivxBadBlockBits = 0x00;    
+        // consensus.nPivxBadBlockTime = disabled;
+        // consensus.nPivxBadBlockBits = 0x00;
 
         // Zerocoin-related params
         consensus.ZC_Modulus = "25195908475657893494027183240048398571429282126204032027777137836043662020707595556264018525880784"
@@ -183,7 +240,7 @@ public:
         consensus.vUpgrades[Consensus::UPGRADE_BIP65].nActivationHeight                 = 905101;
         consensus.vUpgrades[Consensus::UPGRADE_ZC_PUBLIC].nActivationHeight             = Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
         consensus.vUpgrades[Consensus::UPGRADE_V3_4].nActivationHeight                  = 905201;
-        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight                  = 905301; 
+        consensus.vUpgrades[Consensus::UPGRADE_V4_0].nActivationHeight                  = 905301;
         consensus.vUpgrades[Consensus::UPGRADE_V5_DUMMY].nActivationHeight              = 905401;
         consensus.vUpgrades[Consensus::UPGRADE_STAKE_MIN_DEPTH_V2].nActivationHeight    = 905501;
         consensus.vUpgrades[Consensus::UPGRADE_CHECK_WORK_V2].nActivationHeight         = 910001;
@@ -203,10 +260,10 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 4-byte int at any alignment.
          */
-        pchMessageStart[0] = 0x13;
-        pchMessageStart[1] = 0xb2;
-        pchMessageStart[2] = 0x3e;
-        pchMessageStart[3] = 0x58;
+        pchMessageStart[0] = 0x12;
+        pchMessageStart[1] = 0xa2;
+        pchMessageStart[2] = 0x2e;
+        pchMessageStart[3] = 0x59;
         nDefaultPort = 45328;
 
         // Note that of those with the service bits flag, most only support a subset of possible options
@@ -295,9 +352,9 @@ public:
 
         // height based activations
         consensus.height_last_ZC_AccumCheckpoint    = disabled;
-        consensus.height_last_ZC_WrappedSerials     = disabled; 
-        consensus.height_start_InvalidUTXOsCheck    = disabled; 
-        consensus.height_start_ZC_InvalidSerials    = disabled; 
+        consensus.height_last_ZC_WrappedSerials     = disabled;
+        consensus.height_start_InvalidUTXOsCheck    = disabled;
+        consensus.height_start_ZC_InvalidSerials    = disabled;
         consensus.height_start_ZC_SerialRangeCheck  = disabled;
         consensus.height_ZC_RecalcAccumulators      = disabled;
 
@@ -343,7 +400,7 @@ public:
         consensus.vUpgrades[Consensus::UPGRADE_V5_DUMMY].hashActivationBlock            = uint256S("0x0");
         consensus.vUpgrades[Consensus::UPGRADE_STAKE_MIN_DEPTH_V2].hashActivationBlock  = uint256S("0x0");
         consensus.vUpgrades[Consensus::UPGRADE_CHECK_WORK_V2].hashActivationBlock       = uint256S("0x0");
-        
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
